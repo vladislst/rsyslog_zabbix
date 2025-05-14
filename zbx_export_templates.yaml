@@ -1,0 +1,71 @@
+zabbix_export:
+  version: '6.0'
+  date: '2025-05-14T08:58:29Z'
+  groups:
+    - uuid: 7df96b18c230490a9a0a9e2307226338
+      name: Templates
+  templates:
+    - uuid: fe59e3ea3aab40789971147a4e90cd03
+      template: syslog
+      name: syslog
+      groups:
+        - name: Templates
+      items:
+        - uuid: 509a6afe84d1440dbfc210f9d2ec0dc7
+          name: FULL_MESSAGE_JSON
+          type: TRAP
+          key: FULL_MESSAGE_JSON
+          delay: '0'
+          trends: '0'
+          value_type: TEXT
+      discovery_rules:
+        - uuid: beb1d60e827544bab2ddde605ea1b37f
+          name: Discovery
+          type: DEPENDENT
+          key: FULL_MESSAGE_JSON_DISCOVERY
+          delay: '0'
+          item_prototypes:
+            - uuid: cbb177ce0c064f1881db617db114f39d
+              name: '{#IP}'
+              type: DEPENDENT
+              key: 'MESSAGE_DISCOVERY[{#IP}]'
+              delay: '0'
+              trends: '0'
+              value_type: TEXT
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$[?(@.ip == ''{#IP}'')].message'
+              master_item:
+                key: FULL_MESSAGE_JSON
+              trigger_prototypes:
+                - uuid: 1bc8736e3722460682ee1e7631411257
+                  expression: 'find(/syslog/MESSAGE_DISCOVERY[{#IP}],60,"like","set_holtek")=1'
+                  name: 'set_holtek IP:{#IP}'
+                  opdata: 'ТА IP:{#IP} MAC:{#MAC}'
+                  priority: WARNING
+                - uuid: 8f84cf1bd4ce4dd19c706077fe087263
+                  expression: 'find(/syslog/MESSAGE_DISCOVERY[{#IP}],60,"like","tftp to file failed")=1'
+                  recovery_mode: NONE
+                  name: 'Не удается получить конфиг TA:{#IP}'
+                  opdata: 'ТА IP:{#IP} MAC:{#MAC}'
+                  priority: AVERAGE
+                  manual_close: 'YES'
+                - uuid: a18bdc0fcb304c9688c445060a75e01f
+                  expression: 'find(/syslog/MESSAGE_DISCOVERY[{#IP}],60,"like","Register fail")=1'
+                  name: 'Проблема регистрации ТА {#IP}'
+                  opdata: 'ТА IP:{#IP} MAC:{#MAC}'
+                  priority: AVERAGE
+          master_item:
+            key: FULL_MESSAGE_JSON
+          lld_macro_paths:
+            - lld_macro: '{#IP}'
+              path: $.ip
+            - lld_macro: '{#MAC}'
+              path: $.mac
+            - lld_macro: '{#MESSAGE}'
+              path: $.message
+            - lld_macro: '{#PROG}'
+              path: $.prog
+            - lld_macro: '{#TIMESTAMP}'
+              path: $.timestamp
