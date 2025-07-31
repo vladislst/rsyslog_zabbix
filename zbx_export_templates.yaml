@@ -1,6 +1,6 @@
 zabbix_export:
   version: '6.0'
-  date: '2025-05-14T08:58:29Z'
+  date: '2025-07-31T10:11:06Z'
   groups:
     - uuid: 7df96b18c230490a9a0a9e2307226338
       name: Templates
@@ -39,32 +39,41 @@ zabbix_export:
               master_item:
                 key: FULL_MESSAGE_JSON
               trigger_prototypes:
-                - uuid: 1bc8736e3722460682ee1e7631411257
-                  expression: 'find(/syslog/MESSAGE_DISCOVERY[{#IP}],60,"like","set_holtek")=1'
-                  name: 'set_holtek IP:{#IP}'
-                  opdata: 'ТА IP:{#IP} MAC:{#MAC}'
-                  priority: WARNING
-                - uuid: 8f84cf1bd4ce4dd19c706077fe087263
-                  expression: 'find(/syslog/MESSAGE_DISCOVERY[{#IP}],60,"like","tftp to file failed")=1'
-                  recovery_mode: NONE
-                  name: 'Не удается получить конфиг TA:{#IP}'
-                  opdata: 'ТА IP:{#IP} MAC:{#MAC}'
+                - uuid: 03dd9af218cf490a8acdeef6923aa5ff
+                  expression: 'find(/syslog/MESSAGE_DISCOVERY[{#IP}],30,"regexp","Alarm: ADD Code=[0-9]{1,}")=1'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'find(/syslog/MESSAGE_DISCOVERY[{#IP}],30,"regexp","Alarm: DEL Code=[0-9]{1,}")=1'
+                  name: 'Авария потоков IP: {#IP} A-B: {#CHANNEL}'
+                  opdata: '{{#MESSAGE}.regsub("\ Desc=[a-zA-Z0-9.\/]*\ ",\0)} {{#MESSAGE}.regsub("\ ObjId=[a-zA-Z0-9.\/]*\ ",\0)}'
                   priority: AVERAGE
+                  type: MULTIPLE
+                - uuid: 8f84cf1bd4ce4dd19c706077fe087263
+                  expression: 'find(/syslog/MESSAGE_DISCOVERY[{#IP}],30,"like","tftp to file failed")=1'
+                  recovery_mode: NONE
+                  name: 'Не удается получить конфиг TA:{#IP} №: {#NUMBER}'
+                  opdata: 'Номер ТА: {#NUMBER} IP:{#IP} MAC:{#MAC}'
+                  priority: AVERAGE
+                  type: MULTIPLE
                   manual_close: 'YES'
                 - uuid: a18bdc0fcb304c9688c445060a75e01f
-                  expression: 'find(/syslog/MESSAGE_DISCOVERY[{#IP}],60,"like","Register fail")=1'
-                  name: 'Проблема регистрации ТА {#IP}'
-                  opdata: 'ТА IP:{#IP} MAC:{#MAC}'
+                  expression: 'find(/syslog/MESSAGE_DISCOVERY[{#IP}],30,"like","Register fail")=1'
+                  name: 'Проблема регистрации ТА {#IP} №: {#NUMBER}'
+                  opdata: 'Номер ТА: {#NUMBER} IP:{#IP} MAC:{#MAC}'
                   priority: AVERAGE
+                  type: MULTIPLE
           master_item:
             key: FULL_MESSAGE_JSON
           lld_macro_paths:
+            - lld_macro: '{#CHANNEL}'
+              path: $.channel
             - lld_macro: '{#IP}'
               path: $.ip
             - lld_macro: '{#MAC}'
               path: $.mac
             - lld_macro: '{#MESSAGE}'
               path: $.message
+            - lld_macro: '{#NUMBER}'
+              path: $.number
             - lld_macro: '{#PROG}'
               path: $.prog
             - lld_macro: '{#TIMESTAMP}'
